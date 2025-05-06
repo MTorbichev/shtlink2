@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Кликер</title>
+  <link rel="icon" href="/static/krk.png" type="image/png"></link>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f2f4f9;
+      font-family: system-ui, sans-serif;
+      color: #2d2d2d;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 80px auto;
+      padding: 0 24px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .logo {
+      background: #ff3b30;
+      color: white;
+      font-weight: bold;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0;
+      color: #2d2d2d;
+    }
+
+    p.description {
+      font-size: 17px;
+      color: #4d4d4d;
+      margin: 16px 0 30px 0;
+      line-height: 1.5;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input {
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: none;
+      font-size: 15px;
+      flex: 1;
+      background: white;
+      box-shadow: 0 0 0 1px #ccc;
+      outline: none;
+    }
+
+    button {
+      padding: 14px 24px;
+      border-radius: 16px;
+      background-color: #d6cfcfcc;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      color: #777777;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    button:enabled {
+      background-color: rgb(240, 210, 15);
+    }
+
+    .error-text {
+      color: rgb(172, 23, 23);
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* Единый блок результата */
+    #result-block {
+      display: none;
+      margin-top: 30px;
+      padding: 16px 20px;
+      border: 1px solid #ccc;
+      border-radius: 14px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      max-width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    #short-link {
+      margin: 0;
+      font-size: 16px;
+      flex: 1;
+    }
+
+    #short-link a {
+      color: rgb(0, 0, 0);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    #short-link a:hover {
+      color: #74211d;
+    }
+
+    #qr-code {
+      width: 100px;
+      height: 100px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="/static/ccc32.png" alt="Логотип" class="logo-img" />
+      <h1>Кликер</h1>
+    </div>
+
+    <p class="description">
+      Помогите клиентам быстро найти вашу страницу в интернете. Благодаря короткой ссылке клиентам не придётся видеть длинные url-адреса, занимающие много места.
+    </p>
+
+    <form id="shortForm">
+      <input type="text" id="url" placeholder="Введите ссылку, которую нужно сократить" />
+      <button type="submit" id="submitb" disabled>Сократить</button>
+    </form>
+
+    <p id="errorurl" class="error-text">Некорректная ссылка</p>
+
+    <!-- Новый единый блок -->
+    <div id="result-block">
+      <p id="short-link"></p>
+      <img id="qr-code" alt="qr-code" />
+    </div>
+  </div>
+
+  <script>
+    const urlsave = document.getElementById("url");
+    const submitbttn = document.getElementById("submitb");
+    const errormessage = document.getElementById("errorurl");
+
+    function validurl(str) {
+      try {
+        let url = new URL(str);
+        return url.protocol === "http:" || url.protocol === "https:";
+      } catch (_) {
+        return false;
+      }
+    }
+
+    urlsave.addEventListener("input", () => {
+      submitbttn.disabled = urlsave.value.trim() === "";
+      errormessage.style.display = "none";
+    });
+
+    document.getElementById("shortForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      let url = urlsave.value.trim();
+      if (!validurl(url)) {
+        errormessage.textContent = "Некорректная ссылка";
+        errormessage.style.display = "block";
+        return;
+      }
+
+      errormessage.style.display = "none";
+
+      let res = await fetch("/short", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      let data = await res.json();
+      if (data.shtlll) {
+        document.getElementById("short-link").innerHTML = `<a href="${data.shtlll}" target="_blank">${data.shtlll}</a>`;
+        let qrImg = document.getElementById("qr-code");
+        qrImg.src = `${data.qrcodes}`;
+        qrImg.style.display = "block";
+        document.getElementById("result-block").style.display = "flex";
+      } else {
+        alert("Ошибка при сокращении");
+      }
+    });
+  </script>
+</body>
+</html>
