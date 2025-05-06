@@ -3,3 +3,4 @@ pydantic
 qrcode
 uvicorn
 jinja2
+Pillow
